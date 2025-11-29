@@ -1,18 +1,25 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Films } from 'src/films/film.entity';
+import { Equal, Repository } from 'typeorm';
 import {
   GetFilmDTO,
   GetFilmsDTO,
   GetScheduleDTO,
   GetSessionsDTO,
 } from './dto/films.dto';
-import { FilmsRepository } from 'src/repository/repository';
-import { IFilm, ISchedule } from 'src/repository/repository.types';
+import { Schedules } from 'src/order/schedule.entity';
 
 @Injectable()
 export class FilmsService {
-  constructor(private readonly filmsRepository: FilmsRepository) {}
+  constructor(
+    @InjectRepository(Films)
+    private filmRepository: Repository<Films>,
+    @InjectRepository(Schedules)
+    private scheduleRepository: Repository<Schedules>,
+  ) {}
 
-  private getFilmMapperFn(): (Film: IFilm) => GetFilmDTO {
+  private getFilmMapperFn(): (Film: Films) => GetFilmDTO {
     return (root) => {
       return {
         id: root.id,
@@ -28,7 +35,7 @@ export class FilmsService {
     };
   }
 
-  private getScheduleMapperFn(): (schedule: ISchedule) => GetScheduleDTO {
+  private getScheduleMapperFn(): (schedule: Schedules) => GetScheduleDTO {
     return (root) => {
       return {
         id: root.id,
@@ -43,21 +50,23 @@ export class FilmsService {
   }
 
   async findAll(): Promise<GetFilmsDTO> {
-    const films: IFilm[] = await this.filmsRepository.getAllFilms();
-    const total = films.length;
+    const films: Films[] = await this.filmRepository.find();
     return {
-      total: total,
-      items: await films.map(this.getFilmMapperFn()),
+      total: films.length,
+      items: films.map(this.getFilmMapperFn()),
     };
   }
 
   async findSessions(id: string): Promise<GetSessionsDTO> {
-    const film = await this.filmsRepository.getSchedule(id);
-    const sessions = film[0].schedule;
-    const total = sessions.length;
+    const sessions = await this.scheduleRepository.find({
+      where: { film: Equal(id) },
+      order: {
+        daytime: 'ASC',
+      },
+    });
     return {
-      total: total,
-      items: await sessions.map(this.getScheduleMapperFn()),
+      total: 1,
+      items: sessions.map(this.getScheduleMapperFn()),
     };
   }
 }

@@ -9,8 +9,8 @@ export class ticketsData {
 }
 
 export class MakeOrderDTO {
-  email?: any;
-  phone?: any;
+  email: string;
+  phone: string;
   tickets: ticketsData[];
 }
 
@@ -29,8 +29,4 @@ export class OrderSuccessDTO {
   items: OrderDataSuccess[];
 }
 
-export class BookingPlacesDTO {
-  filmId: string;
-  sessionId: string;
-  place: string;
-}
+export type MakeOrderRes = OrderSuccessDTO | Error;

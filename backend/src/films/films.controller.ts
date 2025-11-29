@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, Param } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { FilmsService } from './films.service';
 import { GetFilmsDTO, GetSessionsDTO } from './dto/films.dto';
 
@@ -11,7 +11,6 @@ export class FilmsController {
     return this.filmsService.findAll();
   }
 
-  @HttpCode(200)
   @Get(':id/schedule')
   async getSchedule(@Param('id') id: string): Promise<GetSessionsDTO> {
     return this.filmsService.findSessions(id);

@@ -1,45 +1,65 @@
 import { Injectable } from '@nestjs/common';
-import { FilmsRepository } from 'src/repository/repository';
-import { MakeOrderDTO, ticketsData } from './dto/order.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Schedules } from 'src/order/schedule.entity';
+import { MakeOrderDTO, MakeOrderRes, ticketsData } from './dto/order.dto';
+import { Equal, Repository } from 'typeorm';
 import { faker } from '@faker-js/faker';
 
 @Injectable()
 export class OrderService {
-  constructor(private readonly filmsRepository: FilmsRepository) {}
+  constructor(
+    @InjectRepository(Schedules)
+    private scheduleRepository: Repository<Schedules>,
+  ) {}
 
-  async makeOrder(orderData: MakeOrderDTO): Promise<any> {
+  async makeOrder(orderData: MakeOrderDTO): Promise<MakeOrderRes> {
     const ticketsData: ticketsData[] = orderData.tickets;
 
     for (const ticket of ticketsData) {
-      const check = await this.filmsRepository.checkFreePlace({
-        filmId: ticket.film,
-        sessionId: ticket.session,
-        place: `${ticket.row}:${ticket.seat}`,
+      const session = await this.scheduleRepository.findOne({
+        where: { id: Equal(ticket.session) },
       });
+      if (!session) {
+        return new Error(`Сеанс с id ${ticket.session} не найден`);
+      }
 
-      if (!check) {
-        return { message: `Место ${ticket.row}:${ticket.seat} уже занято` };
+      const takenPlaces = session.taken.split(',');
+      const orderPlace = `${ticket.row}:${ticket.seat}`;
+      if (takenPlaces.includes(orderPlace)) {
+        return new Error(`Место ${orderPlace} уже занято`);
       }
     }
 
     const bookingData = [];
-
-    for (const order of ticketsData) {
-      const booking = await this.filmsRepository.bookingPlaces({
-        filmId: order.film,
-        sessionId: order.session,
-        place: `${order.row}:${order.seat}`,
+    for (const ticket of ticketsData) {
+      const session = await this.scheduleRepository.findOne({
+        where: { id: Equal(ticket.session) },
       });
 
-      if (booking) {
-        const id = faker.string.uuid();
-        const data = { ...order, id };
-        bookingData.push(data);
+      const taken = session.taken;
+      const orderPlace = `${ticket.row}:${ticket.seat}`;
+      let updateTaken: string;
+
+      if (taken.length > 0) {
+        updateTaken = taken + ',' + orderPlace;
+      } else {
+        updateTaken = orderPlace;
       }
 
+      const booking = await this.scheduleRepository.update(
+        { id: Equal(ticket.session) },
+        { taken: updateTaken },
+      );
+
       if (!booking) {
-        return { error: 'Не удалось оформить заказ' };
+        return new Error(
+          `При сохранении билета на сеанс ${ticket.session}, место ${orderPlace} возникла ошибка`,
+        );
       }
+
+      const orderId = faker.string.uuid();
+      const orderData = { ...ticket, orderId };
+      bookingData.push(orderData);
     }
 
     return {

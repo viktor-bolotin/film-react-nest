@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule } from '@nestjs/config';
 
 import { configProvider } from './app.config.provider';
 import { FilmsController } from './films/films.controller';
-import { OrderController } from './order/order.controller';
 import { FilmsService } from './films/films.service';
-import { OrderService } from './order/order.service';
-import { FilmSchema } from './repository/repository.types';
-import { FilmsRepository } from './repository/repository';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Films } from './films/film.entity';
+import { Schedules } from './order/schedule.entity';
+import { OrderController } from './order/order.controller';
+import { OrderService } from './order/order.service';
 
 @Module({
   imports: [
@@ -22,16 +22,20 @@ import { join } from 'path';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
     }),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('DATABASE_URL'),
-      }),
-      inject: [ConfigService],
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      username: 'prac',
+      password: 'prac',
+      database: 'prac',
+      entities: [Films, Schedules],
+      synchronize: true,
     }),
-    MongooseModule.forFeature([{ name: 'film', schema: FilmSchema }]),
+    TypeOrmModule.forFeature([Films]),
+    TypeOrmModule.forFeature([Schedules]),
   ],
   controllers: [FilmsController, OrderController],
-  providers: [configProvider, FilmsService, OrderService, FilmsRepository],
+  providers: [configProvider, FilmsService, OrderService],
 })
 export class AppModule {}
