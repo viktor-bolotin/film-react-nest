@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Schedules } from 'src/order/schedule.entity';
+import { Schedules } from './schedule.entity';
 import { MakeOrderDTO, MakeOrderRes, ticketsData } from './dto/order.dto';
 import { Equal, Repository } from 'typeorm';
 import { faker } from '@faker-js/faker';
