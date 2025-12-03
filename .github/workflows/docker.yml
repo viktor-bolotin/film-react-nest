@@ -19,14 +19,14 @@ jobs:
       - name: Build and push backend Docker image
         uses: docker/build-push-action@v3
         with:
-          context: ./backend
-          file: ./backend/Dockerfile
+          context: ../backend
+          file: ../backend/Dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ github.repository }}/backend:latest
       - name: Build and push frontend Docker image
         uses: docker/build-push-action@v3
         with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
+          context: ../frontend
+          file: ../frontend/Dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ github.repository }}/frontend:latest
