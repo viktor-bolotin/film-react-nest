@@ -1,4 +1,4 @@
-nv:
+env:
   REGISTRY: ghcr.io
 
 name: publish
