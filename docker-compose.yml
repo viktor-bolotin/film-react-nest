@@ -6,8 +6,6 @@ services:
       - nginx
     volumes:
       - frontend:/app/dist
-    env_file:
-      - ./backend/.env
   backend:
     image: ghcr.io/viktor-bolotin/film-react-nest/backend:latest
     container_name: backend
