@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Films } from 'src/films/film.entity';
+import { Films } from './film.entity';
 import { Equal, Repository } from 'typeorm';
 import {
   GetFilmDTO,
@@ -8,7 +8,7 @@ import {
   GetScheduleDTO,
   GetSessionsDTO,
 } from './dto/films.dto';
-import { Schedules } from 'src/order/schedule.entity';
+import { Schedules } from '../order/schedule.entity';
 
 @Injectable()
 export class FilmsService {
